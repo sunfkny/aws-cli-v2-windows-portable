@@ -1,0 +1,43 @@
+name: Build AWS CLI Portable
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "20 */4 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure Git
+        shell: pwsh
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+
+      - name: Build and Publish
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $versions =
+            ./get-versions.ps1 |
+            ConvertFrom-Json
+
+          if (-not $versions) {
+            Write-Host "No new versions"
+            exit 0
+          }
+
+          foreach ($version in @($versions)) {
+            Write-Host "Processing $version"
+
+            ./build.ps1 $version
+            ./publish.ps1 $version
+          }
