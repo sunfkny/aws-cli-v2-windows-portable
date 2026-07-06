@@ -29,7 +29,7 @@ $archive =
 gh release create `
     "v$Version" `
     $archive `
-    --title "AWS CLI Portable $Version" `
+    --title "$Version" `
     --notes-file $notes
 
 git tag "v$Version"
