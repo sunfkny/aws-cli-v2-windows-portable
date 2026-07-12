@@ -10,13 +10,17 @@ $changelog = (
 ).Content
 
 $notes = Join-Path $env:RUNNER_TEMP "aws-cli-$Version.md"
+$escapedVersion = [regex]::Escape($Version)
+$match = [regex]::Match(
+    $changelog,
+    "(?ms)^$escapedVersion`r?`n=+`r?`n(?<Notes>.*?)(?=^\d+\.\d+\.\d+`r?`n=+`r?$|\z)"
+)
 
-(
-    [regex]::Match(
-        $changelog,
-        "(?ms)^$([regex]::Escape($Version))`r?`n=+.*?(?=^\d+\.\d+\.\d+`r?$|\z)"
-    )
-).Value |
+if (-not $match.Success) {
+    throw "Version $Version was not found in the AWS CLI changelog"
+}
+
+$match.Groups["Notes"].Value.Trim() |
     Set-Content `
     $notes `
     -Encoding utf8
